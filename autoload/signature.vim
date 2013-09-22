@@ -210,6 +210,9 @@ function! s:ToggleSign( sign, mode, lnum ) "                                    
 
   "echom "DEBUG: sign = " . a:sign . ",  mode = " . a:mode . ",  lnum = " . a:lnum
 
+  " Don't place signs if Signature is disabled
+  if !b:sig_enabled | return | endif
+
   let l:SignatureIncludeMarkers  = ( exists('b:SignatureIncludeMarkers')  ? b:SignatureIncludeMarkers  : g:SignatureIncludeMarkers )
   let l:SignatureMarkOrder       = ( exists('b:SignatureMarkOrder')       ? b:SignatureMarkOrder       : g:SignatureMarkOrder )
   let l:SignaturePrioritizeMarks = ( exists('b:SignaturePrioritizeMarks') ? b:SignaturePrioritizeMarks : g:SignaturePrioritizeMarks )
@@ -255,8 +258,8 @@ function! s:ToggleSign( sign, mode, lnum ) "                                    
     let l:str = substitute( l:str,                "\p", strpart( b:sig_marks[l:lnum], 1, 1 ), "" )
     execute 'sign define sig_Sign_' . l:id . ' text=' . l:str . ' texthl=' . g:SignatureMarkTextHL
   elseif has_key( b:sig_markers, l:lnum )
-      let l:str = strpart( b:sig_markers[l:lnum], 0, 1 )
-      execute 'sign define sig_Sign_' . l:id . ' text=' . l:str . ' texthl=' . g:SignatureMarkerTextHL
+    let l:str = strpart( b:sig_markers[l:lnum], 0, 1 )
+    execute 'sign define sig_Sign_' . l:id . ' text=' . l:str . ' texthl=' . g:SignatureMarkerTextHL
   else
     execute 'sign unplace ' . l:id
     return
@@ -527,18 +530,18 @@ function! signature#BufferMaps( mode ) "                                        
 endfunction
 
 
-function! signature#SignRefresh(...) "                                                   {{{2
+function! signature#SignRefresh(...) "                                                {{{2
   " Description: Add signs for new marks/markers and remove signs for deleted marks/markers
   " Arguments: '1' to force a sign refresh
-
-  if !exists('b:sig_enabled') | let b:sig_enabled = 1 | endif
-  " If Signature has been disabled, return
-  if ( !b:sig_enabled ) | return | endif
 
   if !exists('b:sig_marks')   | let b:sig_marks   = {} | endif
     " b:sig_marks   = { lnum:signs_str }
   if !exists('b:sig_markers') | let b:sig_markers = {} | endif
     " b:sig_markers = { lnum:marker }
+
+  " If Signature has been disabled, return
+  if !exists('b:sig_enabled') | let b:sig_enabled = 0 | endif
+  if ( !b:sig_enabled ) | return | endif
 
   let l:SignatureIncludeMarks = ( exists('b:SignatureIncludeMarks') ? b:SignatureIncludeMarks : g:SignatureIncludeMarks )
   let l:used_marks = map( copy(s:MarksList( "used" )), 'v:val[0]')
